@@ -86,7 +86,7 @@ cd backend
 docker compose up -d
 ```
 
-If using local DynamoDB, set `DYNAMODB_ENDPOINT=http://localhost:8000` in `.env`.
+If using local DynamoDB, set `DYNAMODB_ENDPOINT=http://localhost:8002` in `.env`.
 
 Create required tables:
 ```bash

@@ -51,4 +51,21 @@ router.get("/search", async (req, res) => {
   }
 });
 
+router.delete("/:ticker", async (req, res) => {
+  try {
+    const ticker = req.params.ticker;
+    if (!ticker) {
+      return res.status(400).json({ error: "ticker path parameter is required" });
+    }
+
+    await favoritesRepository.removeFavorite({
+      userId: req.user.userId,
+      ticker,
+    });
+    return res.status(200).json({ message: "Favorite removed" });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to remove favorite" });
+  }
+});
+
 module.exports = router;

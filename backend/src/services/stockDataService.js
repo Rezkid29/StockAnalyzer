@@ -94,6 +94,14 @@ async function fetchIntradayBestEffort(ticker) {
   }
 }
 
+async function fetchBestEffort(functionName, ticker) {
+  try {
+    return await fetchAlphaVantage(functionName, ticker);
+  } catch {
+    return {};
+  }
+}
+
 async function getLiveStockData(tickerRaw) {
   if (!env.alphaVantageApiKey) {
     throw new Error("ALPHAVANTAGE_API_KEY is not configured.");
@@ -109,11 +117,11 @@ async function getLiveStockData(tickerRaw) {
     return cached.data;
   }
 
-  const [quote, intraday, overview, incomeStatement] = await Promise.all([
-    fetchAlphaVantage("GLOBAL_QUOTE", ticker),
+  const quote = await fetchAlphaVantage("GLOBAL_QUOTE", ticker);
+  const [intraday, overview, incomeStatement] = await Promise.all([
     fetchIntradayBestEffort(ticker),
-    fetchAlphaVantage("OVERVIEW", ticker),
-    fetchAlphaVantage("INCOME_STATEMENT", ticker),
+    fetchBestEffort("OVERVIEW", ticker),
+    fetchBestEffort("INCOME_STATEMENT", ticker),
   ]);
 
   const data = mapStockPayload({
@@ -124,7 +132,7 @@ async function getLiveStockData(tickerRaw) {
     incomeStatement,
   });
 
-  if (!data.price && !data.pe && !data.growth) {
+  if (!data.price) {
     throw new Error("No live stock data returned for this ticker.");
   }
 
