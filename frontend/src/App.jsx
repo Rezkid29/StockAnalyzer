@@ -106,6 +106,7 @@ function App() {
   const [favoritesLoading, setFavoritesLoading] = useState(false)
   const [stockLoading, setStockLoading] = useState(false)
   const [favoriteSaving, setFavoriteSaving] = useState(false)
+  const [favoriteRemovingTicker, setFavoriteRemovingTicker] = useState('')
   const [favoriteIndustryByTicker, setFavoriteIndustryByTicker] = useState({})
 
   const activeStock = currentTicker ? stockByTicker[currentTicker] || EMPTY_STOCK : EMPTY_STOCK
@@ -239,6 +240,27 @@ function App() {
       setAuthError(error.message)
     } finally {
       setFavoriteSaving(false)
+    }
+  }
+
+  async function removeFavorite(ticker) {
+    if (!ticker) return
+    setFavoriteRemovingTicker(ticker)
+    try {
+      await apiRequest(`/favorites/${ticker}`, {
+        method: 'DELETE',
+        token: authToken,
+      })
+      setFavoriteTickers((current) => current.filter((entry) => entry !== ticker))
+      setFavoriteIndustryByTicker((current) => {
+        const next = { ...current }
+        delete next[ticker]
+        return next
+      })
+    } catch (error) {
+      setAuthError(error.message)
+    } finally {
+      setFavoriteRemovingTicker('')
     }
   }
 
@@ -394,12 +416,20 @@ function App() {
               industryFilter={industryFilter}
               setIndustryFilter={setIndustryFilter}
               onOpenFavorite={openFavorite}
+              onRemoveFavorite={removeFavorite}
+              removingTicker={favoriteRemovingTicker}
               loading={favoritesLoading}
             />
           </aside>
         </div>
 
-        <FavoritesTable favorites={favoriteTickers} stockByTicker={stockByTicker} favoriteIndustryByTicker={favoriteIndustryByTicker} />
+        <FavoritesTable
+          favorites={favoriteTickers}
+          stockByTicker={stockByTicker}
+          favoriteIndustryByTicker={favoriteIndustryByTicker}
+          onRemoveFavorite={removeFavorite}
+          removingTicker={favoriteRemovingTicker}
+        />
 
         <div className="dashboard-grid">
           <PortfolioSummary summary={summary} />
@@ -567,7 +597,17 @@ function ResearchBrief({ stock, ticker }) {
   )
 }
 
-function FavoritesPanel({ favorites, stockByTicker, favoriteIndustryByTicker, industryFilter, setIndustryFilter, onOpenFavorite, loading }) {
+function FavoritesPanel({
+  favorites,
+  stockByTicker,
+  favoriteIndustryByTicker,
+  industryFilter,
+  setIndustryFilter,
+  onOpenFavorite,
+  onRemoveFavorite,
+  removingTicker,
+  loading,
+}) {
   return (
     <section className="panel" id="favoritesPanel">
       <div className="section-title">
@@ -599,6 +639,17 @@ function FavoritesPanel({ favorites, stockByTicker, favoriteIndustryByTicker, in
                   <span>P/E <b>{formatMetric(stock.pe)}</b></span>
                   <span>G/P/E <b className={signalClass(stock)}>{formatRatio(growthOverPe(stock))}</b></span>
                 </div>
+                <button
+                  className="remove-favorite-button"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onRemoveFavorite(ticker)
+                  }}
+                  disabled={removingTicker === ticker}
+                >
+                  {removingTicker === ticker ? 'Removing...' : 'Remove'}
+                </button>
               </button>
             )
           })
@@ -609,7 +660,7 @@ function FavoritesPanel({ favorites, stockByTicker, favoriteIndustryByTicker, in
   )
 }
 
-function FavoritesTable({ favorites, stockByTicker, favoriteIndustryByTicker }) {
+function FavoritesTable({ favorites, stockByTicker, favoriteIndustryByTicker, onRemoveFavorite, removingTicker }) {
   return (
     <section className="panel table-wrap wide-panel">
       <div className="section-title">
@@ -641,7 +692,17 @@ function FavoritesTable({ favorites, stockByTicker, favoriteIndustryByTicker }) 
                 <td>{formatMetric(stock.growth, '%')}</td>
                 <td>{formatMetric(stock.pe)}</td>
                 <td className={signalClass(stock)}><strong>{formatRatio(growthOverPe(stock))}</strong></td>
-                <td>{signalText(stock)}</td>
+                <td>
+                  {signalText(stock)}
+                  <button
+                    className="remove-favorite-button table"
+                    type="button"
+                    onClick={() => onRemoveFavorite(ticker)}
+                    disabled={removingTicker === ticker}
+                  >
+                    {removingTicker === ticker ? 'Removing...' : 'Remove'}
+                  </button>
+                </td>
               </tr>
             )
           })}

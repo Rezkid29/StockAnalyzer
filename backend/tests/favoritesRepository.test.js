@@ -65,4 +65,22 @@ describe("favorites repository", () => {
     expect(command.input.ExpressionAttributeValues[":industry"]).toBe("Healthcare");
     expect(results).toHaveLength(1);
   });
+
+  test("removeFavorite deletes record by user and ticker key", async () => {
+    mockSend.mockResolvedValueOnce({});
+
+    await favoritesRepository.removeFavorite({
+      userId: "user-1",
+      ticker: "msft",
+    });
+
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const command = mockSend.mock.calls[0][0];
+    expect(command.constructor.name).toBe("DeleteCommand");
+    expect(command.input.TableName).toBe("favorites-test");
+    expect(command.input.Key).toEqual({
+      userId: "user-1",
+      ticker: "MSFT",
+    });
+  });
 });

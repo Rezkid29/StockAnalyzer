@@ -607,6 +607,22 @@ select {
   text-align: left;
 }
 
+.remove-favorite-button {
+  justify-self: end;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #f0c4cc;
+  border-radius: 8px;
+  background: #fff4f6;
+  color: #9f3042;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.remove-favorite-button.table {
+  margin-left: 12px;
+}
+
 .fav-top strong {
   font-size: 15px;
 }

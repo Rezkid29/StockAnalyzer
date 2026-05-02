@@ -1,4 +1,4 @@
-const { PutCommand, QueryCommand } = require("@aws-sdk/lib-dynamodb");
+const { PutCommand, QueryCommand, DeleteCommand } = require("@aws-sdk/lib-dynamodb");
 const { docClient } = require("../lib/dynamoClient");
 const env = require("../config/env");
 
@@ -48,8 +48,21 @@ async function searchFavoritesByIndustry({ userId, industry }) {
   return response.Items || [];
 }
 
+async function removeFavorite({ userId, ticker }) {
+  await docClient.send(
+    new DeleteCommand({
+      TableName: env.favoritesTable,
+      Key: {
+        userId,
+        ticker: ticker.toUpperCase(),
+      },
+    })
+  );
+}
+
 module.exports = {
   saveFavorite,
   listFavoritesByUser,
   searchFavoritesByIndustry,
+  removeFavorite,
 };
